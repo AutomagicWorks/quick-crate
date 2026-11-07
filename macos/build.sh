@@ -5,6 +5,7 @@
 # Override the bundle ID if you like:  BUNDLE_ID=io.github.yourname.quickcrate ./build.sh
 set -e
 cd "$(dirname "$0")"
+VERSION="$(cat ../VERSION 2>/dev/null || echo 0.0.0)"
 command -v swiftc >/dev/null || { echo "swiftc not found. Run: xcode-select --install"; exit 1; }
 BUNDLE_ID="${BUNDLE_ID:-local.quickcrate}"
 APP="$HOME/Applications/Quick Crate.app"
@@ -31,8 +32,8 @@ cat > "$APP/Contents/Info.plist" <<PL
 <key>CFBundleIconFile</key><string>AppIcon</string>
 <key>CFBundleExecutable</key><string>QuickCrate</string>
 <key>CFBundlePackageType</key><string>APPL</string>
-<key>CFBundleVersion</key><string>1</string>
-<key>CFBundleShortVersionString</key><string>1.0</string>
+<key>CFBundleVersion</key><string>$VERSION</string>
+<key>CFBundleShortVersionString</key><string>$VERSION</string>
 <key>LSMinimumSystemVersion</key><string>14.0</string>
 <key>NSHighResolutionCapable</key><true/>
 </dict></plist>

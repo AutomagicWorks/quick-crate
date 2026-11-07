@@ -33,6 +33,10 @@ let tagArgs = ["--parse-metadata", "%(title)s:%(meta_title)s",
 /// Cuts sections SponsorBlock users marked as non-music (talking intros/outros) out of music videos. YouTube only.
 let sponsorBlockArgs = ["--sponsorblock-remove", "music_offtopic"]
 let ytdlpOldDays = 60
+/// Shown next to the title, so bug reports can say which version they are on (set from VERSION by build.sh).
+let appVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "dev"
+/// Quotes a value for yt-dlp options that it splits like a Unix shell (such as --postprocessor-args).
+func shellQuote(_ s: String) -> String { "'" + s.replacingOccurrences(of: "'", with: "'\\''") + "'" }
 let outputName = "%(meta_artist,artist&{} - |)s%(meta_title,title)s.%(ext)s"
 
 var childEnv: [String: String] {
@@ -369,7 +373,7 @@ final class Downloader: ObservableObject {
                  "--print", "pre_process:TITLE %(title)s",
                  "--print", "before_dl:SRC %(acodec)s|%(abr)s",
                  "--print", "before_dl:DUR %(duration)s",
-                 "--postprocessor-args", "ExtractAudio:-progress \(pfile) -nostats",
+                 "--postprocessor-args", "ExtractAudio:-progress \(shellQuote(pfile)) -nostats",
                  "--print", "after_move:FILE %(filepath)s",
                  "-o", outputName, "-P", dir.path, "-P", "temp:\(tmp)", "--", link]
         let p = Process()
@@ -516,6 +520,7 @@ struct ContentView: View {
             HStack(spacing: 10) {
                 Image(nsImage: NSApplication.shared.applicationIconImage).resizable().frame(width: 48, height: 48)
                 Text("Quick Crate").font(.title2.bold())
+                Text("v\(appVersion)").font(.callout).foregroundStyle(.secondary)
                 Spacer()
                 Button("Quit") { d.quitApp() }.controlSize(.small).help("Quit Quick Crate")
             }
