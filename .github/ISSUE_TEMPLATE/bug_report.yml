@@ -1,0 +1,64 @@
+name: Bug report
+description: Something in Quick Crate doesn't work as expected.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting! Most download errors are fixed by updating yt-dlp (the **Update yt-dlp** button, or `brew upgrade yt-dlp`), so please try that first.
+  - type: checkboxes
+    id: updated
+    attributes:
+      label: Before you report
+      options:
+        - label: I updated yt-dlp and the problem still happens.
+          required: true
+  - type: dropdown
+    id: version
+    attributes:
+      label: Which version?
+      options:
+        - macOS app
+        - Web version
+        - Both
+    validations:
+      required: true
+  - type: input
+    id: quickcrate
+    attributes:
+      label: Quick Crate version
+      description: The release (for example v1.0.0), or the output of `git log -1 --oneline` in your copy.
+    validations:
+      required: true
+  - type: input
+    id: ytdlp
+    attributes:
+      label: yt-dlp version
+      description: The output of `yt-dlp --version`.
+    validations:
+      required: true
+  - type: input
+    id: os
+    attributes:
+      label: Operating system
+      placeholder: macOS 15.1, Apple silicon
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: What you did, what you expected, and what happened instead. Which format and options did you choose?
+    validations:
+      required: true
+  - type: textarea
+    id: error
+    attributes:
+      label: Error message
+      description: Copy the exact error text shown in the window. For the web launcher, the log is in `~/Library/Logs/Quick Crate (Web).log`.
+      render: text
+  - type: input
+    id: link
+    attributes:
+      label: Link (optional)
+      description: Only share a link to something you're allowed to download, such as a Creative Commons video.

@@ -1,0 +1,29 @@
+name: Feature request
+description: Suggest an idea for Quick Crate.
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Quick Crate deliberately stays small: audio only, one link at a time, built around a DJ's workflow. Ideas that fit that focus are the most likely to be added.
+  - type: textarea
+    id: problem
+    attributes:
+      label: What are you trying to do?
+      description: Describe the problem or workflow, not just the solution.
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: What would help?
+    validations:
+      required: true
+  - type: dropdown
+    id: version
+    attributes:
+      label: Which version is this for?
+      options:
+        - macOS app
+        - Web version
+        - Both
