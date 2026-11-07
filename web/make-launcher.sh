@@ -7,6 +7,7 @@
 # Run this again if you move this folder.
 set -e
 cd "$(dirname "$0")"
+VERSION="$(cat ../VERSION 2>/dev/null || echo 0.0.0)"
 DIR="$PWD"
 PY="$(command -v python3)" || { echo "python3 not found. Install it with: xcode-select --install"; exit 1; }
 NAME="Quick Crate (Web)"
@@ -37,8 +38,8 @@ cat > "$APP/Contents/Info.plist" <<PLIST
 <key>CFBundleExecutable</key><string>launch</string>
 <key>CFBundleIconFile</key><string>AppIcon</string>
 <key>CFBundlePackageType</key><string>APPL</string>
-<key>CFBundleVersion</key><string>1</string>
-<key>CFBundleShortVersionString</key><string>1.0</string>
+<key>CFBundleVersion</key><string>$VERSION</string>
+<key>CFBundleShortVersionString</key><string>$VERSION</string>
 <key>LSUIElement</key><true/>
 </dict></plist>
 PLIST

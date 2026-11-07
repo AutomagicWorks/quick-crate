@@ -3,8 +3,8 @@
 
 It serves generated test audio from a local web server (no internet or real sites needed), starts
 server.py with a temporary home folder (your own settings and Downloads are not touched), then checks:
-MP3 and M4A downloads with clean "Artist - Title" names and tags, Cancel, the bad-link error, and on
-Windows that the conversion runs at Idle priority. Needs yt-dlp and ffmpeg on PATH.
+the version shown, MP3 and M4A downloads with clean "Artist - Title" names and tags, Cancel, the bad-link
+error, that nothing is written to the working folder, and on Windows that the conversion runs at Idle priority. Needs yt-dlp and ffmpeg on PATH.
 
     python3 tests/smoke_test.py
 """
@@ -98,7 +98,11 @@ def main():
         else:
             raise AssertionError("server didn't start")
 
-        assert get("/api/settings")["download_dir"] == str(downloads.resolve()), get("/api/settings")
+        settings = get("/api/settings")
+        assert settings["download_dir"] == str(downloads.resolve()), settings
+        version = (ROOT / "VERSION").read_text().strip()
+        assert settings["version"] == version, settings
+        print(f"ok   shows version {version}")
         info = get("/api/ytdlp")
         assert info["installed"], info
         print(f"ok   server up, yt-dlp {info['version']}")
