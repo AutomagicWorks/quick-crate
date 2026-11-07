@@ -18,7 +18,7 @@ Quick Crate is a small, fast front end for [yt-dlp](https://github.com/yt-dlp/yt
 It comes in two versions with the same features:
 
 - **`macos/`**: a native macOS app (SwiftUI, a few hundred KB, no Electron).
-- **`web/`**: a small local web page served by a single Python file (standard library only). It works on macOS, and should also work on Linux and Windows.
+- **`web/`**: a small local web page served by a single Python file (standard library only). It works on macOS and Windows (see [On Windows](#on-windows)), and should also work on Linux.
 
 ## Built for DJs First
 
@@ -73,7 +73,7 @@ There are many excellent yt-dlp front ends. Most aim to do everything; Quick Cra
 - Background priority for downloads and conversions, so playback in your DJ software isn't affected
 - **Remove non-music parts** (optional, YouTube only): cuts talking intros and outros using [SponsorBlock](https://sponsor.ajay.app) community data. When it's on, the video ID is sent to SponsorBlock's servers.
 - **Cancel** a download at any point. Nothing is left behind, because unfinished files are kept in a temporary folder until the download is done.
-- A warning when your yt-dlp is more than 60 days old, with an **Update yt-dlp** button (it uses Homebrew if that's how yt-dlp was installed, and `yt-dlp -U` otherwise). The button also appears when a download fails, because an outdated yt-dlp is the most common cause.
+- A warning when your yt-dlp is more than 60 days old, with an **Update yt-dlp** button (it uses Homebrew or winget if that's how yt-dlp was installed, and `yt-dlp -U` otherwise). The button also appears when a download fails, because an outdated yt-dlp is the most common cause.
 - **Paste & download** button, and you can drag a link from your browser onto the window
 - A notification when a download finishes in the background (click it to show the file)
 - Download and conversion progress
@@ -89,13 +89,16 @@ Install yt-dlp and ffmpeg:
 ```sh
 # macOS (Homebrew)
 brew install yt-dlp ffmpeg
+
+# Windows (in Terminal; this installs FFmpeg too)
+winget install yt-dlp.yt-dlp
 ```
 
 On other systems, use your package manager (for example `sudo apt install ffmpeg` with `pipx install yt-dlp`) or download them from the [yt-dlp](https://github.com/yt-dlp/yt-dlp#installation) and [FFmpeg](https://ffmpeg.org/download.html) sites.
 
-Both versions look for the tools in `~/.local/bin`, then `/opt/homebrew/bin` and `/usr/local/bin`, then your `PATH`.
+Both versions look for the tools in `~/.local/bin`, then `/opt/homebrew/bin` and `/usr/local/bin`, then your `PATH`. On Windows, the web version also checks winget's folder.
 
-Keep yt-dlp up to date (`brew upgrade yt-dlp`), because sites change often and old versions stop working.
+Keep yt-dlp up to date (`brew upgrade yt-dlp`, or `winget upgrade yt-dlp.yt-dlp` on Windows), because sites change often and old versions stop working.
 
 ## macOS app
 
@@ -133,6 +136,21 @@ bash web/make-launcher.sh
 ```
 
 It creates **Quick Crate (Web).app** in `~/Applications`, with the same icon as the native app. Opening it starts the server in the background and opens the window; if it's already running, it just opens the window. The launcher exits straight away, so there's nothing to quit. Close the window and the server stops on its own. Its log is in `~/Library/Logs/Quick Crate (Web).log`.
+
+### On Windows
+
+<p align="center">
+  <img src="docs/screenshot-windows.png" alt="The Quick Crate web version on Windows after downloading a track" width="440">
+</p>
+<p align="center"><sub>Same Creative Commons track as above, by Kevin MacLeod (incompetech.com).</sub></p>
+
+1. Install Python from [python.org](https://www.python.org/downloads/windows/) (the standard installer includes everything Quick Crate needs), and yt-dlp with FFmpeg: open Terminal and run `winget install yt-dlp.yt-dlp`.
+2. Download Quick Crate: on this page click **Code**, then **Download ZIP**, and unzip it somewhere permanent, such as your Documents folder. (Or use `git clone` as above.)
+3. Double-click **`web\Quick Crate.pyw`**. It starts Quick Crate without a console window and opens it in its own compact window (Chrome, Edge or Brave). Close the window and Quick Crate stops on its own.
+
+To start it from your desktop, right-click `Quick Crate.pyw` and choose **Show more options**, then **Send to**, then **Desktop (create shortcut)**. The log is in `%LOCALAPPDATA%\Quick Crate\server.log`.
+
+On Windows, downloads and conversions run at the lowest CPU priority (Idle). Unlike on a Mac, Windows doesn't also lower their disk priority.
 
 The chosen download folder is saved in `~/.config/quick-crate/config.json`.
 

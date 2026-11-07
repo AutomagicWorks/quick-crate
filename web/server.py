@@ -3,7 +3,7 @@
 
 Runs on your own computer only (127.0.0.1). Needs yt-dlp and ffmpeg installed; see README.md.
 """
-import datetime, json, os, platform, re, shutil, signal, subprocess, sys, tempfile, threading, time, uuid, webbrowser
+import datetime, json, os, platform, re, shlex, shutil, signal, subprocess, sys, tempfile, threading, time, uuid, webbrowser
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
@@ -21,8 +21,15 @@ ACTIVITY = {"last": time.monotonic(), "bye": None}
 
 # Where to look for yt-dlp / ffmpeg / ffprobe before falling back to PATH.
 SEARCH_DIRS = [Path.home() / ".local" / "bin", Path("/opt/homebrew/bin"), Path("/usr/local/bin")]
-INSTALL_HINT = ("Install it first: on a Mac run  brew install yt-dlp ffmpeg  "
-                "(other systems: see the README).")
+if SYSTEM == "Windows":
+    # winget's command folder, in case PATH hasn't picked it up yet after installing.
+    SEARCH_DIRS.insert(0, Path(os.environ.get("LOCALAPPDATA", Path.home() / "AppData" / "Local")) / "Microsoft" / "WinGet" / "Links")
+if SYSTEM == "Windows":
+    INSTALL_HINT = ("Install it first: open Terminal and run  winget install yt-dlp.yt-dlp  "
+                    "(it installs FFmpeg too), then restart Quick Crate.")
+else:
+    INSTALL_HINT = ("Install it first: on a Mac run  brew install yt-dlp ffmpeg  "
+                    "(other systems: see the README).")
 
 
 def tool(name):
@@ -316,7 +323,19 @@ def low_priority(cmd):
         return ["/usr/sbin/taskpolicy", "-b"] + cmd
     if SYSTEM != "Windows" and shutil.which("nice"):
         return ["nice", "-n", "15"] + cmd
-    return cmd
+    return cmd  # Windows: see win_flags(low=True)
+
+
+def win_flags(low=False):
+    """Extra subprocess options on Windows: no console window flashing up for each tool (the launcher
+    runs without one), and for downloads and conversions the lowest CPU priority, which ffmpeg inherits
+    from yt-dlp. Empty on other systems."""
+    if SYSTEM != "Windows":
+        return {}
+    flags = subprocess.CREATE_NO_WINDOW
+    if low:
+        flags |= subprocess.IDLE_PRIORITY_CLASS
+    return {"creationflags": flags}
 
 
 def nice(codec):
@@ -339,7 +358,7 @@ def describe_quality(path, src, fmt="mp3", vbr=True):
     try:
         out = subprocess.run([tool("ffprobe") or "ffprobe", "-v", "error", "-select_streams", "a:0",
                               "-show_entries", "stream=codec_name,sample_rate,channels,bit_rate:format=bit_rate",
-                              "-of", "json", path], capture_output=True, text=True, timeout=20)
+                              "-of", "json", path], capture_output=True, text=True, timeout=20, **win_flags())
         info = json.loads(out.stdout)
         st = info["streams"][0]
         out_codec = st.get("codec_name", out_codec)
@@ -378,7 +397,7 @@ def cbr_rate(ytdlp, url):
     """Constant bitrate (kbps) matching the source's best audio, capped at 320."""
     try:
         out = subprocess.run(low_priority([ytdlp, "-f", "bestaudio", "--no-playlist", "--print", "%(abr)s", "--", url]),
-                             capture_output=True, text=True, timeout=60)
+                             capture_output=True, text=True, timeout=60, **win_flags(low=True))
         abr = float(out.stdout.strip().splitlines()[-1])
         return next((r for r in MP3_RATES if r >= abr - 1), 320)
     except Exception:
@@ -414,7 +433,9 @@ def run_job(job_id, url, fmt, vbr, square, sponsor, ytdlp, ffmpeg, out_dir):
            "--print", "pre_process:TITLE %(title)s",
            "--print", "before_dl:SRC %(acodec)s|%(abr)s",
            "--print", "before_dl:DUR %(duration)s",
-           "--postprocessor-args", f"ExtractAudio:-progress {pfile} -nostats",
+           # yt-dlp splits these like a Unix shell, so quote the path and use forward slashes
+           # (Windows backslashes would otherwise be dropped, and spaces would split it).
+           "--postprocessor-args", f"ExtractAudio:-progress {shlex.quote(Path(pfile).as_posix())} -nostats",
            "--print", "after_move:FILE %(filepath)s",
            "-o", OUTPUT_NAME, "-P", str(out_dir), "-P", f"temp:{tmp}", "--", url]
     tail = []
@@ -435,7 +456,8 @@ def run_job(job_id, url, fmt, vbr, square, sponsor, ytdlp, ffmpeg, out_dir):
             raise InterruptedError
         # Own process group, so Cancel can stop yt-dlp and the ffmpeg it starts in one go.
         p = subprocess.Popen(low_priority(cmd), stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True,
-                             encoding="utf-8", errors="replace", start_new_session=(SYSTEM != "Windows"))
+                             encoding="utf-8", errors="replace", start_new_session=(SYSTEM != "Windows"),
+                             **win_flags(low=True))
         job["proc"] = p
         for line in p.stdout:
             line = line.rstrip()
@@ -490,7 +512,7 @@ def ytdlp_info():
     if not path:
         return {"installed": False}
     try:
-        v = subprocess.run([path, "--version"], capture_output=True, text=True, timeout=30).stdout.strip()
+        v = subprocess.run([path, "--version"], capture_output=True, text=True, timeout=30, **win_flags()).stdout.strip()
         y, m, d = (int(x) for x in v.split(".")[:3])
         age = (datetime.date.today() - datetime.date(y, m, d)).days
     except Exception:
@@ -506,12 +528,16 @@ def update_ytdlp():
     before = ytdlp_info().get("version")
     real = os.path.realpath(path)
     brew = tool("brew")
+    winget = tool("winget") if SYSTEM == "Windows" else None
     if brew and ("/Cellar/" in real or real.startswith("/opt/homebrew/")):
         cmd = [brew, "upgrade", "yt-dlp"]
+    elif winget and "winget" in real.lower():
+        cmd = [winget, "upgrade", "--id", "yt-dlp.yt-dlp", "--exact",
+               "--accept-source-agreements", "--accept-package-agreements", "--disable-interactivity"]
     else:
         cmd = [path, "-U"]
     try:
-        r = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
+        r = subprocess.run(cmd, capture_output=True, text=True, timeout=300, **win_flags())
     except Exception as e:
         return {"ok": False, "message": f"Update failed: {e}"}
     after = ytdlp_info().get("version")
@@ -538,7 +564,7 @@ def choose_folder(current):
     script = ("import sys,tkinter as t;from tkinter import filedialog as f;r=t.Tk();r.withdraw();"
               "r.attributes('-topmost',True);print(f.askdirectory(initialdir=sys.argv[1],"
               "title='Choose where downloads are saved'))")
-    r = subprocess.run([sys.executable, "-c", script, str(current)], capture_output=True, text=True)
+    r = subprocess.run([sys.executable, "-c", script, str(current)], capture_output=True, text=True, **win_flags())
     if r.returncode != 0:
         raise RuntimeError("No folder picker is available here. Set download_dir in " + str(CONFIG) + " instead.")
     return r.stdout.strip() or None
@@ -564,7 +590,7 @@ def cancel_job(job):
     if p and p.poll() is None:
         try:
             if SYSTEM == "Windows":
-                subprocess.run(["taskkill", "/F", "/T", "/PID", str(p.pid)], capture_output=True)
+                subprocess.run(["taskkill", "/F", "/T", "/PID", str(p.pid)], capture_output=True, **win_flags())
             else:
                 os.killpg(p.pid, signal.SIGTERM)
         except OSError:
@@ -624,7 +650,7 @@ class Handler(BaseHTTPRequestHandler):
             f, ffmpeg = job_file(JOBS[m.group(1)]), tool("ffmpeg")
             if f and ffmpeg:
                 r = subprocess.run([ffmpeg, "-v", "error", "-i", str(f), "-an", "-frames:v", "1",
-                                    "-c:v", "copy", "-f", "image2pipe", "-"], capture_output=True, timeout=20)
+                                    "-c:v", "copy", "-f", "image2pipe", "-"], capture_output=True, timeout=20, **win_flags())
                 if r.returncode == 0 and r.stdout:
                     return self.send(200, r.stdout, "image/jpeg")
         self.send(404, {"error": "not found"})
@@ -705,6 +731,13 @@ def app_window_browser():
                 exe = f"{root}/{name}.app/Contents/MacOS/{name}"
                 if os.access(exe, os.X_OK):
                     return exe
+    elif SYSTEM == "Windows":
+        roots = [os.environ.get(v) for v in ("PROGRAMFILES", "PROGRAMFILES(X86)", "LOCALAPPDATA")]
+        for rel in (r"Google\Chrome\Application\chrome.exe", r"Microsoft\Edge\Application\msedge.exe",
+                    r"BraveSoftware\Brave-Browser\Application\brave.exe"):
+            for root in roots:
+                if root and os.path.isfile(os.path.join(root, rel)):
+                    return os.path.join(root, rel)
     elif SYSTEM == "Linux":
         for name in ("google-chrome", "chromium", "chromium-browser", "microsoft-edge", "brave-browser"):
             if shutil.which(name):
