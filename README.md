@@ -8,7 +8,7 @@ Quick Crate is a small, fast front end for [yt-dlp](https://github.com/yt-dlp/yt
 
 <!-- Screenshots: take them while downloading a Creative Commons or public-domain video, not commercial music. -->
 <p align="center">
-  <img src="docs/screenshot-web.png" alt="Quick Crate after downloading a track" width="480">
+  <img src="docs/screenshot-macos.png" alt="The Quick Crate Mac app after downloading a track" width="476">
 </p>
 <p align="center"><sub>
   Screenshot shows <a href="https://incompetech.com">"Monkeys Spinning Monkeys"</a> by Kevin MacLeod (incompetech.com),
