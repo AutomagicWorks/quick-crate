@@ -57,9 +57,5 @@ if command -v swiftc >/dev/null && [ -f ../macos/make_icon.swift ]; then
 fi
 codesign --force --sign - "$APP" >/dev/null 2>&1 || true
 touch "$APP"
-
-# Move the old AppleScript launcher to the Trash if it's still around.
-OLD="$HOME/Applications/Audio Downloader (Web).app"
-if [ -d "$OLD" ] && mv "$OLD" "$HOME/.Trash/" 2>/dev/null; then echo "Moved the old launcher to the Trash."; fi
 echo "Created $APP"
 echo "Open it from Launchpad or Finder, or drag it to your Dock."
