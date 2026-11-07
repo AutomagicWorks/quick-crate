@@ -20,7 +20,7 @@ It comes in two versions with the same features:
 - **`macos/`**: a native macOS app (SwiftUI, a few hundred KB, no Electron).
 - **`web/`**: a small local web page served by a single Python file (standard library only). It works on macOS, and should also work on Linux and Windows.
 
-## Built for DJs
+## Built for DJs First
 
 I DJ from a Mac, and I wanted something I could use on that same machine without thinking about it. Most yt-dlp front ends do everything: video, playlists, 1,000+ sites, dozens of formats. Quick Crate does one thing, audio, and is designed around a DJ's workflow:
 
@@ -32,7 +32,7 @@ I DJ from a Mac, and I wanted something I could use on that same machine without
 
 Good uses: promos, edits and remixes that producers share, your own mixes and uploads, and Creative Commons or free-download tracks. Point **Download to...** at a folder your DJ software imports from, and new tracks are ready to load.
 
-## Not just for DJs
+## Not A DJ?
 
 Anything that needs a clean audio file from a link works the same way:
 
