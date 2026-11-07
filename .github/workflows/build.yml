@@ -28,3 +28,30 @@ jobs:
           bash -n web/make-launcher.sh
           bash web/make-launcher.sh
           plutil -lint "$HOME/Applications/Quick Crate (Web).app/Contents/Info.plist"
+
+  # The web version, end to end (tests/smoke_test.py): real downloads, Cancel, and on Windows the low priority.
+  web:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Install yt-dlp and ffmpeg
+        shell: bash
+        run: |
+          python -m pip install --quiet yt-dlp
+          if [ "$RUNNER_OS" = "Windows" ]; then choco install ffmpeg -y --no-progress; else sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg; fi
+
+      - name: Check the Windows launcher
+        if: runner.os == 'Windows'
+        run: python -m py_compile "web/Quick Crate.pyw"
+
+      - name: Run the end-to-end test
+        run: python tests/smoke_test.py
