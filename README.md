@@ -139,6 +139,11 @@ It creates **Quick Crate (Web).app** in `~/Applications`, with the same icon as 
 
 ### On Windows
 
+<p align="center">
+  <img src="docs/screenshot-windows.png" alt="The Quick Crate web version on Windows after downloading a track" width="440">
+</p>
+<p align="center"><sub>Same Creative Commons track as above, by Kevin MacLeod (incompetech.com).</sub></p>
+
 1. Install Python from [python.org](https://www.python.org/downloads/windows/) (the standard installer includes everything Quick Crate needs), and yt-dlp with FFmpeg: open Terminal and run `winget install yt-dlp.yt-dlp`.
 2. Download Quick Crate: on this page click **Code**, then **Download ZIP**, and unzip it somewhere permanent, such as your Documents folder. (Or use `git clone` as above.)
 3. Double-click **`web\Quick Crate.pyw`**. It starts Quick Crate without a console window and opens it in its own compact window (Chrome, Edge or Brave). Close the window and Quick Crate stops on its own.
