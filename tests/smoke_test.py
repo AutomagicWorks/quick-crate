@@ -84,8 +84,10 @@ def main():
 
     env = dict(os.environ, HOME=str(home), USERPROFILE=str(home), QUICK_CRATE_PORT=str(PORT))
     log = open(work / "server.log", "w")
+    cwd = work / "cwd"  # nothing should ever be written to the server's working folder
+    cwd.mkdir()
     server = subprocess.Popen([sys.executable, str(ROOT / "web" / "server.py"), "--no-browser", "--keep-running"],
-                              env=env, stdout=log, stderr=subprocess.STDOUT)
+                              env=env, stdout=log, stderr=subprocess.STDOUT, cwd=cwd)
     failed = False
     try:
         for _ in range(60):
@@ -126,6 +128,8 @@ def main():
         r = post("/api/download", {"url": "not a link", "format": "mp3"})
         assert "http" in r.get("error", ""), r
         print("ok   bad links are rejected")
+        assert not list(cwd.iterdir()), f"stray files in the working folder: {list(cwd.iterdir())}"
+        print("ok   no stray files")
         print("All tests passed.")
     except Exception:
         failed = True

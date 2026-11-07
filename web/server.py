@@ -3,7 +3,7 @@
 
 Runs on your own computer only (127.0.0.1). Needs yt-dlp and ffmpeg installed; see README.md.
 """
-import datetime, json, os, platform, re, shutil, signal, subprocess, sys, tempfile, threading, time, uuid, webbrowser
+import datetime, json, os, platform, re, shlex, shutil, signal, subprocess, sys, tempfile, threading, time, uuid, webbrowser
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
@@ -433,7 +433,9 @@ def run_job(job_id, url, fmt, vbr, square, sponsor, ytdlp, ffmpeg, out_dir):
            "--print", "pre_process:TITLE %(title)s",
            "--print", "before_dl:SRC %(acodec)s|%(abr)s",
            "--print", "before_dl:DUR %(duration)s",
-           "--postprocessor-args", f"ExtractAudio:-progress {pfile} -nostats",
+           # yt-dlp splits these like a Unix shell, so quote the path and use forward slashes
+           # (Windows backslashes would otherwise be dropped, and spaces would split it).
+           "--postprocessor-args", f"ExtractAudio:-progress {shlex.quote(Path(pfile).as_posix())} -nostats",
            "--print", "after_move:FILE %(filepath)s",
            "-o", OUTPUT_NAME, "-P", str(out_dir), "-P", f"temp:{tmp}", "--", url]
     tail = []
