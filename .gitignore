@@ -1,0 +1,33 @@
+# macOS
+.DS_Store
+
+# Build output (build.sh writes to ~/Applications, but just in case)
+*.app/
+*.icns
+*.iconset/
+build/
+
+# Never commit downloaded tools or media
+yt-dlp
+yt-dlp.exe
+ffmpeg
+ffmpeg.exe
+ffprobe
+ffprobe.exe
+*.mp3
+*.m4a
+*.opus
+*.webm
+*.mp4
+*.jpg
+*.progress
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Editors
+.vscode/
+.idea/
